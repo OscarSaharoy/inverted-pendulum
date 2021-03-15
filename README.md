@@ -1,4 +1,4 @@
 # inverted-pendulum
-Pendulum physics simulation
+Pendulum physics simulation - runs way better in chrome than firefox 
 
 https://codepen.io/oscarsaharoy/pen/LYbmVma
