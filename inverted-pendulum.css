@@ -1,0 +1,245 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Spartan', sans-serif;
+    user-select: none;
+    box-sizing: border-box;
+    touch-action: none;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+body {
+    display: grid;
+}
+
+#background {
+    display: grid;
+    background-color: AliceBlue;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    justify-self: center;
+    align-self: center;
+    justify-content: center;
+    align-content: center;
+}
+
+#container {
+    justify-self: center;
+    align-self: center;
+    width: 37rem;
+    height: min-content;
+    display: grid;
+}
+
+#title {
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: center;
+    font-size: 3.5rem;
+    white-space: nowrap;
+    color: #8CBCE5;
+}
+
+#buttons {
+    display: grid;
+    width: 100%;
+    justify-self: stretch;
+    grid-template-columns: auto auto auto;
+    grid-gap: 1rem;
+    white-space: nowrap;
+}
+
+button {
+    min-width: 6rem;
+    font-size: 1.2rem;
+    color: white;
+    background-color: #8CBCE5;
+    padding: 0.8rem;
+    border-radius: 0.7rem;
+    border: none;
+    cursor: pointer;
+    border: 0.25rem solid #8CBCE5;
+}
+
+button:hover {
+    border: 0.25rem solid #7ea9ce;
+}
+
+button:active {
+    background: #6387A7;
+}
+
+button:focus {
+    outline: none;
+    border: 0.25rem solid #6387A7;
+}
+
+#upper-sliders {
+    width: 100%;
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: 1.8rem auto 7rem;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+#lower-sliders {
+    margin-top: 2rem;
+    width: 100%;
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: 12rem auto 7rem;
+    align-items: center;
+}
+
+#lower-sliders .left,
+#upper-sliders .left {
+    grid-column: 1;
+}
+
+#lower-sliders .middle,
+#upper-sliders .middle {
+    grid-column: 2;
+    min-width: 1rem;
+}
+
+#lower-sliders .right,
+#upper-sliders .right {
+    grid-column: 3;
+}
+
+p {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #8CBCE5;
+    text-align: justify;
+    line-height: 1.32;
+}
+
+input[type="number"] {
+    font-size: 1rem;
+    padding: 0.8rem 0.7rem 0.6rem 0.7rem;
+    border-radius: 0.5rem;
+    text-align: left;
+    background-color: #DDECFB;
+    border: 0.25rem solid #DDECFB;
+    color: #6387A7;
+}
+
+input[type="number"]:hover {
+    border: 0.25rem solid #C9DFF4;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border: 0.25rem solid #8AB1D6;
+}
+
+svg {
+    justify-self: center;
+    grid-column: 1;
+    grid-row: 1;
+    width: 30rem;
+    height: 23rem;
+    overflow: visible;
+}
+
+svg * {
+    fill: #eee;
+    stroke-width: 1;
+    stroke: black;
+}
+
+.top-circle {
+    transform: translateX( 0px ) translateY( -65px );
+}
+
+#bottom-text {
+    margin-top: 1.5rem;
+    justify-self: right;
+    font-size: 1.2rem;
+}
+
+a {
+    text-decoration: none;
+    opacity: 0.6;
+}
+
+input[type=range] {
+    -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+    width: 100%; /* Specific width is required for Firefox. */
+    background: transparent; /* Otherwise white in Chrome */
+    height: 1.5rem;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+}
+
+input[type=range]:focus {
+    outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+
+input[type=range]::-ms-track {
+    width: 100%;
+    cursor: pointer;
+
+    /* Hides the slider so custom styles can be added */
+    background: transparent; 
+    border-color: transparent;
+    color: transparent;
+}
+
+/* Special styling for WebKit/Blink */
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 1.7rem;
+    width: 1.7rem;
+    border-radius: 0.5rem;
+    background-color: #8CBCE5;
+    cursor: pointer;
+    margin-top: -0.6rem; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+}
+   
+input[type=range]:hover::-webkit-slider-thumb {
+    border: 0.25rem solid rgba(0, 0, 0, 0.1);
+}
+
+input[type=range]:focus::-webkit-slider-thumb {
+    border: 0.25rem solid #6387A7;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0.5rem;
+  cursor: pointer;
+  background-color: #DDECFB;
+  border-radius: 0.5rem;
+}
+
+/* All the same stuff for Firefox */
+input[type=range]::-moz-range-thumb {    
+    height: 1.2rem;
+    width: 1.2rem;
+    border-radius: 0.5rem;
+    background-color: #8CBCE5;
+    cursor: pointer;
+    border: 0.25rem solid #8CBCE5;
+}
+   
+input[type=range]:hover::-moz-range-thumb {
+    border: 0.25rem solid rgba(0, 0, 0, 0.1);
+}
+
+input[type=range]:focus::-moz-range-thumb {
+    border: 0.25rem solid #6387A7;
+}
+
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 0.5rem;
+  cursor: pointer;
+  background-color: #DDECFB;
+  border-radius: 0.5rem;
+}
