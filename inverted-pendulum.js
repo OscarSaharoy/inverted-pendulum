@@ -5,6 +5,9 @@
 // rewrite me!!!!
 function controller() {
     
+    // don't even try if the angle is too far off upright
+    if( Math.abs(theta) > 0.5 ) return 0;
+    
     // pid controller (i=0)
     return ( ptheta*theta + dtheta*thetadot + px*x + dx*xdot ) * controllerOn;
 }
@@ -17,12 +20,13 @@ const svgs              = Array.from( document.querySelectorAll( "svg"         )
 const sliderElements    = Array.from( document.querySelectorAll( ".slider"     ) );
 const topCircleElements = Array.from( document.querySelectorAll( ".top-circle" ) );
 const poleElements      = Array.from( document.querySelectorAll( ".pole"       ) );
-const preventDrag       = Array.from( document.querySelectorAll( "input, button, #pendulum *" ) );
+const preventDrag       = Array.from( document.querySelectorAll( "input, button, #drag-target" ) );
 
 const [pendulumSVG, shadowSVG] = svgs;
-const background = document.querySelector( "#background" );
-const container  = document.querySelector( "#container"  );
-const railRect   = document.querySelector( "#rail"       );
+const background = document.querySelector( "#background"  );
+const container  = document.querySelector( "#container"   );
+const railRect   = document.querySelector( "#rail"        );
+const dragTarget = document.querySelector( "#drag-target" );
 
 
 // ---------- pan and zoom code ----------
@@ -52,10 +56,10 @@ let containerScale  = 1;
 let containerOffset = { x: 0, y: 0 };
 
 // link all the pointer events
-background.addEventListener( "pointerdown", pointerdown );
-background.addEventListener( "pointerup",   pointerup   );
-background.addEventListener( "pointermove", pointermove );
-background.addEventListener( "wheel",       wheel       );
+background.addEventListener( "pointerdown",  pointerdown );
+background.addEventListener( "pointerup",    pointerup   );
+background.addEventListener( "pointermove",  pointermove );
+background.addEventListener( "wheel",        wheel       );
 
 function pointerdown( event ) {
     
@@ -303,24 +307,29 @@ class LogSlider extends Slider {
 
 // ---------- pendulum dragging code ----------
 
+// 2 vars used to track the pendulum dragging
 let pendulumDraggingPointer    = null;
 let pendulumDraggingPointerPos = null;
 
-topCircleElements.forEach(
-    elm => elm.addEventListener( "pointerdown", pointerdownOnPendulum  ) );
-railRect.addEventListener(       "pointerdown", pointerdownOnPendulum    );
-background.addEventListener(     "pointerup"  , pointerupOnPendulum      );
-background.addEventListener(     "pointermove", pendulumDragPointermove  );
+// add event listeners
+dragTarget.addEventListener( "pointerdown" , pointerdownOnPendulum   );
+background.addEventListener( "pointermove" , pendulumDragPointermove );
+background.addEventListener( "pointerup"   , pointerupOnPendulum     );
+background.addEventListener( "pointerleave", pointerupOnPendulum     );
 
 function pointerdownOnPendulum( evt ) {
     
-    pendulumDraggingPointer = evt.pointerId;
-    pendulumDragPointermove( evt );
+    // store the pointer ID and position
+    pendulumDraggingPointer    = evt.pointerId;
+    pendulumDraggingPointerPos = pointerToPendulumSpace( evt );
 }
 
 function pointerupOnPendulum( evt ) {
     
+    // only act for the pointer being used
     if( evt.pointerId != pendulumDraggingPointer ) return;
+    
+    // unset all the pointer vars as the pointer has been released
     pendulumDraggingPointer    = null;
     pendulumDraggingPointerPos = null;
 }
@@ -329,14 +338,20 @@ function pendulumDragPointermove( evt ) {
     
     if( evt.pointerId != pendulumDraggingPointer ) return;
     
+    // update the pendulum dragging pointer pos
+    pendulumDraggingPointerPos = pointerToPendulumSpace( evt );
+}
+
+function pointerToPendulumSpace( evt ) {
+    
     // find pendulum origin in pendulum space
     railBBox = railRect.getBoundingClientRect();
-    originX = railBBox.left + railBBox.width  * 0.5;
-    originY = railBBox.top  + railBBox.height * 0.5;
+    originX  = railBBox.left + railBBox.width  * 0.5;
+    originY  = railBBox.top  + railBBox.height * 0.5;
 
-    // get the position of the pointer that is dragging the pendulum in the space of the pendulum
-    pendulumDraggingPointerPos = { x: (evt.clientX - originX) * 0.05 / railBBox.height,
-                                   y: (evt.clientY - originY) * 0.05 / railBBox.height };
+    // return the pointer position in pendulum space
+    return { x: (evt.clientX - originX) * 0.05 / railBBox.height,
+             y: (originY - evt.clientY) * 0.05 / railBBox.height };    
 }
 
 // ---------- end of pendulum dragging code ----------
@@ -353,22 +368,53 @@ function toggleController() {
 function nudge() {
     
     // give an impulse to theta
-    const randomValue = Math.random() - 0.5;
-    thetadot += randomValue + Math.sign( randomValue );
+    const randomValue = ( Math.random() - 0.5 ) / 2;
+    thetadot += ( randomValue + Math.sign( randomValue ) ) / l ;
 }
 
-// add and multiply vectors
-const mul = (vec, k) => vec.map( v => v*k );
-const add = (vec1, vec2) => vec1.map( (_,k) => vec1[k] + vec2[k] );
+// vector operations
+const mul      = (vec , k   ) => vec.map( v => v*k );
+const add      = (vec1, vec2) => vec1.map( (_,k) => vec1[k] + vec2[k] );
+const dot      = (vec1, vec2) => vec1.reduce( (acc, val, k) => acc + vec1[k] * vec2[k], 0 );
+const mod      =  vec         => vec.reduce( (acc,val) => acc + val**2, 0 ) ** 0.5;
+const norm     =  vec         => mul( vec, 1/mod(vec) );
+const rotm90   =  vec         => [ vec[1], -vec[0] ];
+const crossmod = (vec1, vec2) => vec1[0] * vec2[1] - vec1[1] * vec2[0];
 
 function stateDot( state ) {
     
     // get vars out of state vector
     const [theta, x, thetadot, xdot] = state;
     
-    // equations of motion
-    const xddot     = M / ( m + M*Math.sin(theta)**2 ) * ( l * thetadot**2 * Math.sin(theta) - g * Math.sin(theta)*Math.cos(theta) ) - f * xdot + controller();
-    const thetaddot = g/l * Math.sin(theta) - xddot/l * Math.cos(theta);
+    // equations of motion under gravity and controller
+    let xddot     = M / ( m + M*Math.sin(theta)**2 ) 
+                  * ( l * thetadot**2 * Math.sin(theta) 
+                    - g * Math.sin(theta)*Math.cos(theta) )
+                  - f * xdot + controller();
+    
+    let thetaddot = g/l * Math.sin(theta)
+                  - xddot/l * Math.cos(theta);
+    
+    // add dragging forces if there is a dragging pointer
+    if( pendulumDraggingPointer ) {
+        
+        // direction vector of the pendulum pole
+        const poleDir = [ Math.sin(theta), Math.cos(theta) ];
+        
+        // displacement vector to pendulum from mouse
+        const dist = [ pendulumDraggingPointerPos.x - x - l*Math.sin(theta),
+                       pendulumDraggingPointerPos.y     - l*Math.cos(theta) ];
+        
+        // create a force on the pendulum
+        const springForce  = mul( dist, 600 );
+        const thetaddotInc = crossmod( springForce, poleDir ) / ( M * l );
+        const xddotInc     = dot( springForce, [1,0] ) / m - thetaddotInc * M*l/m * Math.cos(theta);
+        
+        // superpose the accelerations from the spring force onto those from the equations of motion
+        // and add damping too
+        thetaddot += thetaddotInc - thetadot * 40;
+        xddot     += xddotInc     - xdot     * 40;
+    }
     
     // return stateDot vector
     return [thetadot, xdot, thetaddot, xddot];
@@ -427,14 +473,14 @@ function updateGraphics() {
 
 function mainloop() {
     
-    // otherwise do the physics step as many times as needed 
+    // do the physics step as many times as needed 
     for(var s=0; s<stepsPerFrame; ++s) updateCoordinates();
     
     // update the graphics
     updateGraphics();
     
     // print energy of system
-    console.log( 1/2*m*xdot**2 + 1/2*M*( ( xdot + l*thetadot*Math.cos(theta) )**2+ (l*thetadot*Math.sin(theta))**2 ) + M*g*l*Math.cos(theta) );
+    // console.log( 1/2*m*xdot**2 + 1/2*M*( ( xdot + l*thetadot*Math.cos(theta) )**2+ (l*thetadot*Math.sin(theta))**2 ) + M*g*l*Math.cos(theta) );
     
     // call this again after 1 frame
     requestAnimationFrame( mainloop );
@@ -457,7 +503,7 @@ var l  = 0.65;                  // pendulum length
 var dt = 0.016 / stepsPerFrame; // time step
 var M  = 1;                     // pendulum mass
 var m  = 1;                     // slider mass
-var f  = 0.0;                   // slider friction
+var f  = 0;                     // slider friction
 
 /// pd controller variables
 var ptheta = 100;
