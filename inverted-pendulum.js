@@ -471,7 +471,9 @@ function updateGraphics() {
 }
 
 
-function mainloop() {
+function mainloop(millis) {
+
+	dt = ( millis / 1000 - t ) / stepsPerFrame;
     
     // do the physics step as many times as needed 
     for(var s=0; s<stepsPerFrame; ++s) updateCoordinates();
@@ -556,4 +558,4 @@ controllerButton.onpointerdown = toggleController;
 nudgeButton.onpointerdown      = nudge;
 
 
-mainloop();
+mainloop(0);
