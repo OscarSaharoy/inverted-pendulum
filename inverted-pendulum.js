@@ -471,9 +471,9 @@ function updateGraphics() {
 }
 
 
-function mainloop(millis) {
+function mainloop(millis, lastMillis) {
 
-	dt = ( millis / 1000 - t ) / stepsPerFrame;
+	dt = ( millis - lastMillis ) / 1000 / stepsPerFrame;
     
     // do the physics step as many times as needed 
     for(var s=0; s<stepsPerFrame; ++s) updateCoordinates();
@@ -485,7 +485,7 @@ function mainloop(millis) {
     // console.log( 1/2*m*xdot**2 + 1/2*M*( ( xdot + l*thetadot*Math.cos(theta) )**2+ (l*thetadot*Math.sin(theta))**2 ) + M*g*l*Math.cos(theta) );
     
     // call this again after 1 frame
-    requestAnimationFrame( mainloop );
+    requestAnimationFrame( newMillis => mainloop(newMillis, millis) );
 }
 
 // ---------- end of simulation code ----------
@@ -558,4 +558,4 @@ controllerButton.onpointerdown = toggleController;
 nudgeButton.onpointerdown      = nudge;
 
 
-mainloop(0);
+mainloop(0, 0);
